@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة المخزون مع توليد ومسح باركود</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+  <h1>📦 إدارة المخزون</h1>
+  <nav>
+    <button onclick="showSection('products')">المنتجات</button>
+    <button onclick="showSection('sales')">المبيعات</button>
+    <button onclick="showSection('inventory')">الجرد</button>
+  </nav>
+
+  <section id="products" class="section active">
+    <h2>➕ إضافة منتج</h2>
+    <input type="text" id="productCode" placeholder="📎 كود المنتج (اختياري أو امسح)">
+    <button onclick="startProductScanner()">📷 امسح باركود المنتج</button>
+    <div id="productReader" style="width:300px; margin:auto;"></div>
+    <input type="text" id="productName" placeholder="اسم المنتج">
+    <input type="number" id="productQty" placeholder="الكمية">
+    <input type="number" id="productPrice" placeholder="السعر">
+    <button onclick="addProduct()">إضافة</button>
+    <table>
+      <thead><tr><th>الباركود</th><th>الاسم</th><th>الكمية</th><th>السعر</th><th>رمز</th><th>🗑️</th></tr></thead>
+      <tbody id="productTable"></tbody>
+    </table>
+  </section>
+
+  <section id="sales" class="section">
+    <h2>🛒 البيع</h2>
+    <input type="text" id="saleCode" placeholder="📎 كود المنتج (باركود)">
+    <input type="number" id="saleQty" placeholder="الكمية">
+    <button onclick="addToCart()">إضافة للسلة</button>
+    <div id="reader" style="width:300px; margin:auto;"></div>
+    <button onclick="startScanner()">📷 امسح الباركود بالكاميرا</button>
+    <table>
+      <thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>المجموع</th><th>حذف</th></tr></thead>
+      <tbody id="cartTable"></tbody>
+    </table>
+    <p>💰 المجموع الكلي: <span id="cartTotal">0</span> دج</p>
+    <button onclick="confirmSale()">تأكيد البيع</button>
+  </section>
+
+  <section id="inventory" class="section">
+    <h2>📋 الجرد</h2>
+    <button onclick="showInventory()">عرض الجرد</button>
+    <ul id="inventoryList"></ul>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
