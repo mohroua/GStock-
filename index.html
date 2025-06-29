@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة المخزون مع لوحة تحكم متقدمة</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2196f3">
+  <link rel="icon" href="icons/e-commerce.png">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>📦 إدارة المخزون</h1>
+  <nav>
+    <button onclick="showSection('dashboard')">الرئيسية</button>
+    <button onclick="showSection('products')">المنتجات</button>
+    <button onclick="showSection('sales')">المبيعات</button>
+    <button onclick="showSection('inventory')">الجرد</button>
+  </nav>
+
+  <section id="dashboard" class="section active">
+    <h2>📈 لوحة التحكم</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>إجمالي قيمة المخزون</h3>
+        <p><span id="dashboardTotalInventoryValue">0</span> دج</p>
+      </div>
+      <div class="stat-card">
+        <h3>عدد المنتجات الفريدة</h3>
+        <p><span id="dashboardTotalProducts">0</span> منتج</p>
+      </div>
+      <div class="stat-card low-stock-items">
+        <h3>🚨 المنتجات منخفضة المخزون</h3>
+        <ul id="dashboardLowStockList">
+          <li>لا توجد منتجات منخفضة المخزون حالياً.</li>
+        </ul>
+      </div>
+      <div class="stat-card">
+        <h3>مبيعات اليوم</h3>
+        <p><span id="dashboardDailySales">0</span> دج</p>
+      </div>
+      <div class="stat-card">
+        <h3>مبيعات الأسبوع</h3>
+        <p><span id="dashboardWeeklySales">0</span> دج</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="products" class="section">
+    <h2>➕ إضافة / تعديل منتج</h2>
+    <input type="text" id="productCode" placeholder="📎 كود المنتج (اختياري أو امسح)">
+    <button class="scan-btn" onclick="startProductScanner()">🖥️ امسح باركود المنتج</button>
+    <div id="productReader" style="width:300px; margin:auto;"></div>
+    <input type="text" id="productName" placeholder="اسم المنتج">
+    <input type="text" id="productCategory" placeholder="الفئة (مثال: إلكترونيات، طعام، ملابس)">
+
+    <label for="productQty">الكمية:</label> <input type="number" list="productQuantityOptions" id="productQty" name="productQty" placeholder="اختر أو اكتب الكمية" min="1">
+    <datalist id="productQuantityOptions"> <option value="1">
+      <option value="2">
+      <option value="3">
+      <option value="4">
+      <option value="5">
+      <option value="6">
+      <option value="7">
+      <option value="8">
+      <option value="9">
+      <option value="10">
+      </datalist>
+
+    <label for="unitType">نوع الوحدة:</label>
+    <select id="unitType">
+      <option value="قطعة">قطعة</option>
+      <option value="كغ">كغ</option>
+      <option value="متر">متر</option>
+      <option value="علبة">علبة</option>
+      <option value="لتر">لتر</option>
+    </select>
+
+    <input type="number" id="productPrice" placeholder="السعر">
+    <button class="add-btn" onclick="addProduct()">إضافة / تحديث المنتج</button>
+
+    <hr>
+    <h3>إضافة كمية لمنتج موجود (أمر شراء)</h3>
+    <input type="text" id="addStockProductCode" placeholder="كود المنتج لإضافة كمية">
+    <input type="number" id="addStockQuantity" placeholder="الكمية المراد إضافتها">
+    <button class="primary-btn" onclick="addQuantityToProduct()">➕ إضافة كمية</button>
+    
+    <h2>قائمة المنتجات</h2>
+    <div class="filter-controls">
+        <input type="text" id="productSearch" placeholder="ابحث بالاسم أو الكود" oninput="updateProductTable()">
+        <select id="productCategoryFilter" onchange="updateProductTable()">
+            <option value="">جميع الفئات</option>
+        </select>
+        <button class="primary-btn" onclick="updateProductTable()" style="width: auto; margin: 0;">تحديث القائمة</button>
+    </div>
+
+    <table>
+      <thead><tr><th>الباركود</th><th>الاسم</th><th>الفئة</th><th>الكمية</th><th>السعر</th><th>رمز</th><th>الإجراءات</th></tr></thead>
+      <tbody id="productTable"></tbody>
+    </table>
+  </section>
+
+  <section id="sales" class="section">
+    <h2>🛒 البيع</h2>
+    <input type="text" id="saleCode" placeholder="📎 كود أو اسم المنتج" list="productSuggestions" oninput="updateSuggestions()">
+    <datalist id="productSuggestions"></datalist>
+
+   <label for="saleQuantity">الكمية:</label>
+   <input type="number" list="quantityOptions" id="saleQuantity" name="saleQuantity" placeholder="اختر أو اكتب الكمية" min="1">
+   <datalist id="quantityOptions"> <option value="1">
+     <option value="2">
+     <option value="3">
+     <option value="4">
+     <option value="5">
+     <option value="6">
+     <option value="7">
+     <option value="8">
+     <option value="9">
+     <option value="10">
+   </datalist>
+
+
+   <button class="add-btn" onclick="addToCart()">إضافة للسلة</button>
+    <div id="reader" style="width:300px; margin:auto;"></div>
+    <button id="scanBtn" class="scan-btn" onclick="startSaleScanner()">🖥️ امسح الباركود بالكاميرا (اختياري)</button>
+    <button id="cancelScanBtn" class="cancel-btn" onclick="cancelSaleScanner()" style="display:none;">❌ إلغاء المسح</button>
+    <table>
+      <thead><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>المجموع</th><th>حذف</th></tr></thead>
+      <tbody id="cartTable"></tbody>
+    </table>
+    <p>🧾 المجموع الكلي: <span id="cartTotal">0</span> دج</p>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+        <button class="confirm-btn" style="width: 180px;" onclick="confirmSale()">تأكيد البيع</button>
+        <button class="cancel-btn" style="width: 180px; background-color: #f44336;" onclick="undoLastSale()">↩️ تراجع عن آخر بيع</button>
+    </div>
+  </section>
+
+  <section id="inventory" class="section">
+    <h2>📋 المخزون الحالي</h2>
+    <div class="filter-controls">
+        <input type="text" id="inventorySearch" placeholder="ابحث عن منتج بالاسم أو الكود" oninput="showInventory()">
+        <select id="inventoryCategoryFilter" onchange="showInventory()">
+            <option value="">جميع الفئات</option>
+            </select>
+        <button class="primary-btn" onclick="showInventory()">عرض/تحديث المخزون</button>
+
+        <div style="position: relative; display: inline-block;">
+            <button onclick="toggleExportMenu('inventory')" class="export-btn" style="display: inline-block; width: auto; margin: 0;">
+                تصدير المخزون ⬇️
+            </button>
+            <div id="inventoryExportMenu" class="export-menu">
+                <a href="#" onclick="exportInventory('pdf'); hideExportMenus();">PDF</a>
+                <a href="#" onclick="exportInventory('csv'); hideExportMenus();">CSV</a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="inventoryDisplay">
+        <table>
+            <thead>
+                <tr>
+                    <th onclick="sortInventory('code')">كود المنتج <span id="sort-code"></span></th>
+                    <th onclick="sortInventory('name')">اسم المنتج <span id="sort-name"></span></th>
+                    <th onclick="sortInventory('category')">الفئة <span id="sort-category"></span></th>
+                    <th onclick="sortInventory('qty')">الكمية المتوفرة <span id="sort-qty"></span></th>
+                    <th onclick="sortInventory('price')">سعر البيع <span id="sort-price"></span></th>
+                    <th>إجمالي قيمة المخزون <span id="sort-total-value"></span></th>
+                    <th>حالة المخزون</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryTableBody"></tbody>
+        </table>
+        <p>📊 إجمالي قيمة المخزون الكلية: <span id="totalInventoryValue">0</span> دج</p>
+    </div>
+    
+    <hr> <h2>📊 سجل المبيعات (الفواتير)</h2>
+    <div class="filter-controls">
+        <input type="date" id="startDate" title="تاريخ البدء">
+        <input type="date" id="endDate" title="تاريخ الانتهاء">
+        <button class="primary-btn" onclick="applyDateFilter()" style="width: auto; margin: 0;">تصفية حسب التاريخ</button>
+        <button class="primary-btn" onclick="resetSalesFilters()" style="background-color: #607d8b; width: auto; margin: 0;">إعادة تعيين الفلاتر</button>
+
+        <div style="position: relative; display: inline-block;">
+            <button onclick="toggleExportMenu('sales')" class="export-btn" style="display: inline-block; width: auto; margin: 0;">
+                تصدير الفواتير ⬇️
+            </button>
+            <div id="salesExportMenu" class="export-menu">
+                <a href="#" onclick="exportSalesHistory('pdf'); hideExportMenus();">PDF</a>
+                <a href="#" onclick="exportSalesHistory('csv'); hideExportMenus();">CSV</a>
+            </div>
+        </div>
+    </div>
+    
+    <button class="primary-btn" onclick="showSalesHistory()">عرض جميع الفواتير</button>
+
+    <div id="salesHistoryContainer" class="section">
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>عدد المنتجات</th>
+                    <th>إجمالي الفاتورة</th>
+                    <th>التاريخ والوقت</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="salesHistoryBody"></tbody>
+        </table>
+        <p>🔄 إجمالي المبيعات الكلي (للفواتير المعروضة): <span id="totalSalesAmount">0</span> دج</p>
+    </div>
+  </section>
+
+  <div id="confirmSaleModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeModal()">&times;</span>
+      <h3>تأكيد عملية البيع</h3>
+      <p>هل أنت متأكد من إتمام هذا البيع؟</p>
+      <p>المجموع الكلي: <strong id="modalCartTotal">0</strong> دج</p>
+      <h4>تفاصيل السلة:</h4>
+      <ul id="modalCartItems">
+        </ul>
+      <div class="modal-buttons">
+        <button class="confirm-sale-btn" onclick="executeSale()">تأكيد</button>
+        <button class="cancel-modal-btn" onclick="closeModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editProductModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeModal()">&times;</span>
+      <h3>تعديل المنتج</h3>
+      <input type="hidden" id="editProductOriginalCode">
+      <label for="editProductCode">كود المنتج:</label>
+      <input type="text" id="editProductCode" placeholder="كود المنتج" readonly>
+      <label for="editProductName">اسم المنتج:</label>
+      <input type="text" id="editProductName" placeholder="اسم المنتج">
+      <label for="editProductCategory">الفئة:</label>
+      <input type="text" id="editProductCategory" placeholder="الفئة">
+      <label for="editProductQty">الكمية:</label>
+      <input type="number" id="editProductQty" placeholder="الكمية">
+      <label for="editProductPrice">السعر:</label>
+      <input type="number" id="editProductPrice" placeholder="السعر">
+      <div class="modal-buttons">
+        <button class="confirm-btn" onclick="saveEditedProduct()">حفظ التعديلات</button>
+        <button class="cancel-btn" onclick="closeModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="invoicePrintModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px; text-align: right;">
+        <span class="close-button" onclick="closeModal()">&times;</span>
+        <div id="invoiceContent" style="padding: 20px; border: 1px solid #eee; background-color: white; color: black;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #ff7300;">فاتورة البيع</h2>
+            <p style="text-align: right;"><strong>رقم الفاتورة:</strong> <span id="printInvoiceId"></span></p>
+            <p style="text-align: right;"><strong>التاريخ والوقت:</strong> <span id="printInvoiceDate"></span></p>
+            <hr style="border-top: 1px dashed #ccc; margin: 15px 0;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">المنتج</th>
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">الكمية</th>
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">السعر (للواحدة)</th>
+                        <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody id="printInvoiceItems">
+                </tbody>
+            </table>
+            <p style="text-align: left; font-size: 1.2em; font-weight: bold; padding-top: 10px; border-top: 2px solid #ff7300;">
+                الإجمالي الكلي: <span id="printInvoiceTotal"></span> دج
+            </p>
+            <p style="text-align: center; margin-top: 30px; font-size: 0.9em; color: #555;">شكراً لتعاملك معنا!</p>
+        </div>
+        <div class="modal-buttons" style="margin-top: 20px;">
+            <button class="confirm-btn" onclick="printInvoice()">🖨️ طباعة الفاتورة</button>
+        </div>
+    </div>
+  </div>
+
+  <div class="notification-container"></div>
+
+  <div class="dark-mode-toggle" onclick="toggleDarkMode()">
+      ☀️
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(function(registration) {
+          console.log('ServiceWorker registered:', registration.scope);
+        }, function(error) {
+          console.log('ServiceWorker registration failed:', error);
+        });
+    });
+  }
+</script>
+
+</body>
+</html>
