@@ -1,0 +1,20 @@
+{
+  "name": "GStock",
+  "short_name": "GStock",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196f3",
+  "icons": [
+    {
+      "src": "icons/401751295234.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/401751295182.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
