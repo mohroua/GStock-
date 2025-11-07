@@ -1,0 +1,29 @@
+{
+  "name": "رفيق الحافظ",
+  "short_name": "الحافظ",
+  "description": "مساعد شخصي لتتبع وإدارة جلسات حفظ القرآن الكريم بطريقة الدقيقتين.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f9fdfa",
+  "theme_color": "#00897b",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
