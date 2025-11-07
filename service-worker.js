@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hifz-companion-v1';
+const CACHE_NAME = 'Rafik-hafez';
 const urlsToCache = [
     '/',
     '/index.html',
